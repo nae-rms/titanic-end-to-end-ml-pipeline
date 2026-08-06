@@ -1,6 +1,6 @@
-import pandas as pd
 from src.data_loader import DataLoader
 from src.preprocessor import Preprocessor
+from src.model_trainer import ModelTrainer
 
 def main():
     print("Data Processing Pipeline")
@@ -22,6 +22,16 @@ def main():
     print(f"Final Data Shape: {final_data.shape}")
     print("Final Data Head")
     print(final_data.head())
+
+    print("\n4 - Train & Test Split Data")
+    trainer = ModelTrainer(final_data)
+    trainer.split_data()
+
+    print("\n5 - Training Model")
+    trainer.train()
+
+    print("\n6 - Saving Model")
+    trainer.save_model()
 
 if __name__ == "__main__":
     main()

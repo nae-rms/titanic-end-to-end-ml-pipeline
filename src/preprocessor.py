@@ -9,6 +9,9 @@ class Preprocessor:
         self.data['Age'] = self.data['Age'].fillna(self.data['Age'].median())
         self.data['Embarked'] = self.data['Embarked'].fillna(self.data['Embarked'].mode()[0])
         self.data = self.data.drop(columns=['Cabin'], errors='ignore')
+        self.data = self.data.drop(columns=['Name'], errors='ignore')
+        self.data = self.data.drop(columns=['Ticket'], errors='ignore')
+        self.data = self.data.drop(columns=['PassengerId'], errors='ignore')
 
         print("Missing values handled.")
         return self
