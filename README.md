@@ -1,4 +1,4 @@
-# Titanic Survival Prediction Pipeline
+# End-to-End ML Prediction Pipeline
 
 A modular and clean Machine Learning pipeline for predicting passenger survival on the Titanic dataset. Built with Python, Pandas, and Scikit-Learn, this repository provides an end-to-end framework for data loading, preprocessing, feature engineering, model training with Random Forest, and inference.
 
