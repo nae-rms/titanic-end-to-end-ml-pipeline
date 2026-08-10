@@ -2,14 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install uv for fast installation
-RUN pip install uv
-
+# Install dependencies
 COPY requirements.txt .
-RUN uv pip install --system -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy all project code
 COPY . .
 
-EXPOSE 8000
+# Expose port 10000
+EXPOSE 10000
 
-CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Uvicorn reading the $PORT variable provided by Render (defaults to 10000)
+CMD ["sh", "-c", "uvicorn src.app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
