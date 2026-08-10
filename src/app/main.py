@@ -3,22 +3,49 @@ import os
 from pathlib import Path
 import pandas as pd
 import gradio as gr
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 
-# Find project root directory (titanic-end-to-end-model/)
+# Resolve absolute path to project root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(BASE_DIR / "src"))
 
 from predictor import load_model, predict_survival
 
-# Resolve exact absolute path to the pickled model
+# Load trained model
 MODEL_PATH = BASE_DIR / "models" / "titanic_model.pkl"
-
-# Load model safely
-if not MODEL_PATH.exists():
-    raise FileNotFoundError(f"Model file not found at: {MODEL_PATH}")
-
 model = load_model(str(MODEL_PATH))
 
+# Initialize FastAPI
+app = FastAPI(title="Titanic Model API")
+
+# Define API request schema
+class PassengerInput(BaseModel):
+    Pclass: int
+    Sex: int
+    Age: float
+    SibSp: int
+    Parch: int
+    Fare: float
+    Embarked: int
+    FamilySize: int
+    IsAlone: int
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/gui")
+
+@app.post("/predict")
+def predict_api(passenger: PassengerInput):
+    df = pd.DataFrame([passenger.model_dump()])
+    prediction = predict_survival(model, df)[0]
+    return {
+        "survived": int(prediction),
+        "status": "Survived" if prediction == 1 else "Not Survived"
+    }
+
+# Define Gradio logic
 def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     sex_num = 0 if sex == "Male" else 1
     embarked_dict = {"Cherbourg (C)": 0, "Queenstown (Q)": 1, "Southampton (S)": 2}
@@ -58,5 +85,5 @@ demo = gr.Interface(
     title="Titanic Survival Predictor"
 )
 
-# Launch ASGI application on root /
-app = demo.app
+# Mount Gradio properly so config gets populated
+app = gr.mount_gradio_app(app, demo, path="/gui")
