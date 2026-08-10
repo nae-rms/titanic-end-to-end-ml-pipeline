@@ -1,47 +1,44 @@
 import pandas as pd
 import gradio as gr
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from src.predictor import load_model, predict_survival
 
-# 1. Initialize FastAPI app
 app = FastAPI(
     title="Titanic Prediction Model",
     description="Titanic prediction model for learning deploying models",
     version="1.0.0"
 )
 
-# Load model once on startup
 model = load_model()
 
-# 2. Define Pydantic schema for API requests
 class PassengerInput(BaseModel):
     Pclass: int
-    Sex: int         # 0 = Male, 1 = Female
+    Sex: int
     Age: float
     SibSp: int
     Parch: int
     Fare: float
-    Embarked: int    # 0 = C, 1 = Q, 2 = S
+    Embarked: int
     FamilySize: int
     IsAlone: int
 
+# Redirect the root URL "/" straight to the Gradio UI at "/gui"
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "Titanic Model API is running!"}
+    return RedirectResponse(url="/gui")
 
 @app.post("/predict")
 def predict_api(passenger: PassengerInput):
     df = pd.DataFrame([passenger.model_dump()])
     prediction = predict_survival(model, df)[0]
-    
     return {
         "survived": int(prediction),
         "status": "Survived" if prediction == 1 else "Not Survived"
     }
 
-# 3. Create Gradio UI for browser usage
 def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     sex_num = 0 if sex == "Male" else 1
     embarked_dict = {"Cherbourg (C)": 0, "Queenstown (Q)": 1, "Southampton (S)": 2}
@@ -80,5 +77,4 @@ ui = gr.Interface(
     title="Titanic Survival Predictor"
 )
 
-# 4. Mount Gradio interface inside FastAPI at /gui
 app = gr.mount_gradio_app(app, ui, path="/gui")
