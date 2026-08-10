@@ -1,43 +1,17 @@
+import sys
+import os
+from pathlib import Path
 import pandas as pd
 import gradio as gr
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
 
-from src.predictor import load_model, predict_survival
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR / "src"))
 
-app = FastAPI(
-    title="Titanic Prediction Model",
-    description="Titanic prediction model for learning deploying models",
-    version="1.0.0"
-)
+from predictor import load_model, predict_survival
 
-model = load_model()
-
-class PassengerInput(BaseModel):
-    Pclass: int
-    Sex: int
-    Age: float
-    SibSp: int
-    Parch: int
-    Fare: float
-    Embarked: int
-    FamilySize: int
-    IsAlone: int
-
-# Redirect the root URL "/" straight to the Gradio UI at "/gui"
-@app.get("/")
-def root():
-    return RedirectResponse(url="/gui")
-
-@app.post("/predict")
-def predict_api(passenger: PassengerInput):
-    df = pd.DataFrame([passenger.model_dump()])
-    prediction = predict_survival(model, df)[0]
-    return {
-        "survived": int(prediction),
-        "status": "Survived" if prediction == 1 else "Not Survived"
-    }
+MODEL_PATH = os.path.join(BASE_DIR, "models", "titanic_model.pkl")
+model = load_model(MODEL_PATH)
 
 def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     sex_num = 0 if sex == "Male" else 1
@@ -48,12 +22,12 @@ def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     is_alone = 1 if family_size == 1 else 0
 
     df = pd.DataFrame([{
-        'Pclass': pclass,
+        'Pclass': int(pclass),
         'Sex': sex_num,
-        'Age': age,
-        'SibSp': sibsp,
-        'Parch': parch,
-        'Fare': fare,
+        'Age': float(age),
+        'SibSp': int(sibsp),
+        'Parch': int(parch),
+        'Fare': float(fare),
         'Embarked': embarked_num,
         'FamilySize': family_size,
         'IsAlone': is_alone
@@ -62,7 +36,8 @@ def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     pred = predict_survival(model, df)[0]
     return "🎉 Survived" if pred == 1 else "💀 Did Not Survive"
 
-ui = gr.Interface(
+# Build Gradio Interface
+demo = gr.Interface(
     fn=predict_ui,
     inputs=[
         gr.Dropdown([1, 2, 3], label="Passenger Class (Pclass)", value=3),
@@ -77,4 +52,5 @@ ui = gr.Interface(
     title="Titanic Survival Predictor"
 )
 
-app = gr.mount_gradio_app(app, ui, path="/gui")
+# Export Gradio's internal ASGI app as the main FastAPI application
+app = demo.app
