@@ -3,22 +3,28 @@ import os
 from pathlib import Path
 import pandas as pd
 import gradio as gr
-from fastapi import FastAPI
 
+# Find project root directory (titanic-end-to-end-model/)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(BASE_DIR / "src"))
 
 from predictor import load_model, predict_survival
 
-MODEL_PATH = os.path.join(BASE_DIR, "models", "titanic_model.pkl")
-model = load_model(MODEL_PATH)
+# Resolve exact absolute path to the pickled model
+MODEL_PATH = BASE_DIR / "models" / "titanic_model.pkl"
+
+# Load model safely
+if not MODEL_PATH.exists():
+    raise FileNotFoundError(f"Model file not found at: {MODEL_PATH}")
+
+model = load_model(str(MODEL_PATH))
 
 def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     sex_num = 0 if sex == "Male" else 1
     embarked_dict = {"Cherbourg (C)": 0, "Queenstown (Q)": 1, "Southampton (S)": 2}
     embarked_num = embarked_dict.get(embarked, 2)
     
-    family_size = sibsp + parch + 1
+    family_size = int(sibsp) + int(parch) + 1
     is_alone = 1 if family_size == 1 else 0
 
     df = pd.DataFrame([{
@@ -36,7 +42,7 @@ def predict_ui(pclass, sex, age, sibsp, parch, fare, embarked):
     pred = predict_survival(model, df)[0]
     return "🎉 Survived" if pred == 1 else "💀 Did Not Survive"
 
-# Build Gradio Interface
+# Build UI
 demo = gr.Interface(
     fn=predict_ui,
     inputs=[
@@ -52,5 +58,5 @@ demo = gr.Interface(
     title="Titanic Survival Predictor"
 )
 
-# Export Gradio's internal ASGI app as the main FastAPI application
+# Launch ASGI application on root /
 app = demo.app
