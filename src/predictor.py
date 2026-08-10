@@ -1,13 +1,15 @@
+import os
 import joblib
 import pandas as pd
 
-def load_model(model_path="models/titanic_model.pkl"):
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "titanic_model.pkl")
+
+def load_model(model_path=MODEL_PATH):
     return joblib.load(model_path)
 
 def predict_survival(model, passenger_data):
-    predictions = model.predict(passenger_data)
-    return predictions
-
+    return model.predict(passenger_data)
 def main():
     model = load_model()
     print("Model loaded!")

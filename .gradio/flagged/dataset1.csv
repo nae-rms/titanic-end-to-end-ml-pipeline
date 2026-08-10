@@ -1,0 +1,2 @@
+Passenger Class (Pclass),Sex,Age,Siblings/Spouses Aboard (SibSp),Parents/Children Aboard (Parch),Fare Paid ($),Embarked Port,Prediction Result,timestamp
+1,Male,20,5,2,15,Cherbourg (C),🎉 Survived,2026-08-10 16:07:47.597569
