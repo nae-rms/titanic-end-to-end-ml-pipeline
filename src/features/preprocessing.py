@@ -1,36 +1,23 @@
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-class Preprocessor:
-    def __init__(self, data):
-        self.data = data.copy()
+def create_preprocessor(numerical_features, categorical_features):
+    return ColumnTransformer([
+        ("numeric", numeric_pipeline(), numerical_features),
+        ("categorical", categorical_pipeline(), categorical_features)
+    ])
 
-    def handle_missing_values(self):
-        self.data['Age'] = self.data['Age'].fillna(self.data['Age'].median())
-        self.data['Embarked'] = self.data['Embarked'].fillna(self.data['Embarked'].mode()[0])
-        self.data = self.data.drop(columns=['Cabin'], errors='ignore')
-        self.data = self.data.drop(columns=['Name'], errors='ignore')
-        self.data = self.data.drop(columns=['Ticket'], errors='ignore')
-        self.data = self.data.drop(columns=['PassengerId'], errors='ignore')
+def numeric_pipeline():
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler()),
+    ])
 
-        print("Missing values handled.")
-        return self
+def categorical_pipeline():
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder())
+    ])
 
-    def encode_categorical_features(self):
-        label_encoders = {}
-
-        for col in ['Sex', 'Embarked']:
-            le = LabelEncoder()
-            self.data[col] = le.fit_transform(self.data[col].astype(str))
-            label_encoders[col] = le
-
-        print("Categorical features encoded.")
-        self.label_encoders = label_encoders
-        return self
-
-    def feature_engineering(self):
-        self.data['FamilySize'] = self.data['SibSp'] + self.data['Parch'] + 1
-        self.data['IsAlone'] = (self.data['FamilySize'] == 1).astype(int)
-
-        print("New features created.")
-        return self
