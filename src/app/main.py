@@ -11,7 +11,7 @@ from pydantic import BaseModel
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(BASE_DIR / "src"))
 
-from predictor import load_model, predict_survival
+from src.models.predict import load_model, predict_survival
 
 # Load trained model
 MODEL_PATH = BASE_DIR / "models" / "titanic_model.pkl"

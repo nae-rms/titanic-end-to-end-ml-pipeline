@@ -1,5 +1,5 @@
 from data_loader import DataLoader
-from preprocessor import Preprocessor
+from src.features.preprocessing import Preprocessor
 from model_trainer import ModelTrainer
 
 def main():
