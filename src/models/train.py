@@ -1,49 +1,57 @@
-import joblib
-from sklearn.metrics import accuracy_score, classification_report
+from src.data_loader import DataLoader
+from src.config import load_config
+from src.features.preprocessing import create_preprocessor
+from src.features.engineering import FeatureEngineer
+from src.evaluation.evaluate import evaluate_model
+
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 
-class ModelTrainer:
-    def __init__(self, data, target_column='Survived'):
-        self.data = data.copy()
-        self.target_column = target_column
-        self.model = None
+from sklearn.ensemble import GradientBoostingClassifier
 
-    def split_data(self, test_size=0.2, random_state=42):
-        X = self.data.drop(columns = [self.target_column])
-        y = self.data[self.target_column]
+def train_model():
+    loader = DataLoader(
+        "data/raw/train.csv"
+    )
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    data = loader.load_data()
 
-        print("Data Split Sucesfully")
-        print(f"Training Set: {len(self.X_train)} samples")
-        print(f"Test Set: {len(self.X_test)} samples")
+    X = data.drop(columns=["Survived"])
+    y = data["Survived"]
 
-    def train(self, model=None):
-        if model is None:
-            self.model = RandomForestClassifier(n_estimators=100, random_state=42)
-        else:
-            self.model = model
+    config = load_config()
+    test_size = config["data"]["test_size"]
+    random_state = config["data"]["random_state"]
 
-        self.model.fit(self.X_train, self.y_train)
-        y_pred = self.model.predict(self.X_test)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=y
+    )
 
-        accuracy = accuracy_score(self.y_test, y_pred)
-        report = classification_report(self.y_test, y_pred)
+    numerical_features = ["Age", "SibSp", "Parch", "Fare", "FamilySize"]
+    categorical_features = ["Sex", "Embarked"]
+    
+    preprocessor = create_preprocessor(
+        numerical_features,
+        categorical_features
+    )
 
-        print("Model Training Success")
-        print(f"Accuracy = {accuracy:.4f}")
-        print(f"Classification: {report}")
+    model = GradientBoostingClassifier(
+        random_state=random_state
+    )
 
-        return self
+    pipeline = Pipeline([
+        ("feature_engineering", FeatureEngineer()),
+        ("preprocessing", preprocessor),
+        ("model", model)
+    ])
 
-    def save_model(self, file_path='models/titanic_model.pkl'):
+    pipeline.fit(X_train, y_train)
 
-        if self.model is None:
-            print("No model.")
-            return self
+    return pipeline, X_test, y_test
 
-        joblib.dump(self.model, file_path)
-        print("Model saved.")
-
-        return self
+if __name__ == "__main__":
+    train_model()

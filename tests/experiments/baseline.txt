@@ -1,0 +1,29 @@
+Model: Logistic Regression
+
+Features:
+Age
+SibSp
+Parch
+Fare
+FamilySize
+Sex
+Embarked
+
+Test Size: 20%
+Random State: 42
+
+Metrics:
+Accuracy: 0.7989
+Precision: 0.7797
+Recall: 0.6667
+F1 Score: 0.7188
+
+Confusion Matrix:
+[[97 13]
+ [23 46]]
+
+Cross-Validation Results:
+Scores: [0.77622378 0.75524476 0.79577465 0.81690141 0.78873239]
+Mean Accuracy: 0.7866
+SD Accuracy: 0.0205
+

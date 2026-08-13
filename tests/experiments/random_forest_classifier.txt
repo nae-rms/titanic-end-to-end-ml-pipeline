@@ -1,0 +1,28 @@
+Model: Random Forest Classifier
+
+Features:
+Age
+SibSp
+Parch
+Fare
+FamilySize
+Sex
+Embarked
+
+Test Size: 20%
+Random State: 42
+
+Metrics:
+Accuracy: 0.7765
+Precision: 0.7377
+Recall: 0.6522
+F1 Score: 0.6923
+
+Confusion Matrix:
+[[94 16]
+ [24 45]]
+
+Cross-Validation Results:
+Scores: [0.76223776 0.72027972 0.81690141 0.83802817 0.77464789]
+Mean Accuracy: 0.7824
+SD Accuracy: 0.0415
